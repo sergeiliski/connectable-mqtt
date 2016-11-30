@@ -89,6 +89,10 @@ class MqttService(cfg: Config) extends Actor with FSM[MqttService.State, Unit] w
   }
 
   when(ConnectedState) {
+    case Event(Connect, _) =>
+      log.info(s"already connected.")
+      stay()
+
     case Event(p: Publish, _) =>
       try {
         val message = new MqttMessage(p.payload.getBytes("utf-8"))
