@@ -12,7 +12,6 @@ import scala.util.control.NonFatal
   */
 
 
-
 object MqttService {
   sealed trait State
   case object DisconnectedState extends State
