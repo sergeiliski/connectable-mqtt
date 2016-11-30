@@ -1,10 +1,9 @@
-
 import akka.actor.{Actor, ActorRef, FSM}
 import akka.event.Logging
 import org.eclipse.paho.client.mqttv3._
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
-import scala.collection.mutable
+import scala.collection.mutable.Queue
 import scala.util.control.NonFatal
 
 /**
@@ -31,8 +30,6 @@ object MqttService {
 class MqttService(cfg: Config) extends Actor with FSM[MqttService.State, Unit] with DebugActor {
   import MqttService._
 
-
-
   override val log = Logging(context.system, this)
   val persistence: MemoryPersistence = new MemoryPersistence()
   val url = cfg.tls match {
@@ -41,8 +38,8 @@ class MqttService(cfg: Config) extends Actor with FSM[MqttService.State, Unit] w
   }
   val client = new MqttAsyncClient(url, MqttAsyncClient.generateClientId(), persistence)
 
-  val subs = mutable.Queue[Subscribe]()
-  val pubs = mutable.Queue[Publish]()
+  val subs = Queue[Subscribe]()
+  val pubs = Queue[Publish]()
 
   /* FSM */
 
