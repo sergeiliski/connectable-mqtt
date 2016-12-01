@@ -1,5 +1,9 @@
+
+
+import MqttService.Subscribe
 import akka.actor.{Actor, ActorRef, FSM}
 import akka.event.Logging
+import com.typesafe.config.ConfigFactory
 import org.eclipse.paho.client.mqttv3._
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
@@ -29,6 +33,7 @@ object MqttService {
 
 class MqttService(cfg: Config) extends Actor with FSM[MqttService.State, Unit] with DebugActor {
   import MqttService._
+  import stash.Stash._
 
   override val log = Logging(context.system, this)
   val persistence: MemoryPersistence = new MemoryPersistence()
@@ -71,13 +76,13 @@ class MqttService(cfg: Config) extends Actor with FSM[MqttService.State, Unit] w
       stay()
 
     case Event(Publish(pubTopic, payload, qos), _) =>
-      //log.info(s"could not publish, not connected.")
-      pubs.enqueue(Publish(pubTopic, payload, qos))
+      log.info(s"could not publish, not connected -> adding to publish queue.")
+      pubs.save(Publish(pubTopic, payload, qos))
       stay()
 
     case Event(Subscribe(topics, nextActor, qos), _) =>
-      //log.info(s"could not subscribe, not connected.")
-      subs.enqueue(Subscribe(topics, nextActor, qos))
+      log.info(s"could not subscribe, not connected -> adding to subscribe queue.")
+      subs.save(Subscribe(topics, nextActor, qos))
       stay()
 
     case Event(Unsubscribe(unsubTopic), _) =>

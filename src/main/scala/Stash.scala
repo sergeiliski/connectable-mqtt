@@ -1,7 +1,11 @@
-import MqttService.Subscribe
+package stash
+
+import com.sun.istack.internal.logging.Logger
 
 import scala.collection.mutable.Queue
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{ConfigException, ConfigFactory}
+
+import scala.util.control.NonFatal
 
 /**
   * Created by sergei on 30-11-16.
@@ -22,14 +26,16 @@ object Stash {
 }
 
 class Stash[A](q: Queue[A]) {
-  val size = ConfigFactory.load().getInt("stash.size") | 5
-  print(size)
+  val size: Int = try {
+    ConfigFactory.load().getInt("stash.size")
+  } catch {
+    case e: ConfigException=> 10
+    case NonFatal(e) => 10
+  }
+
   implicit def save[B >: A](elem: A): Queue[A] = {
     q.enqueue(elem)
     if (q.size > size) { q.dequeue }
     q
   }
 }
-
-import Stash._
-val esa = Queue[Subscribe]()
